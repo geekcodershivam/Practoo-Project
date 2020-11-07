@@ -1,0 +1,19 @@
+.appointment-area
+{
+    background-image: url(../../images/bg-banner.png);
+    background-size:cover;
+    height:100vh;   
+}
+.appointment-card{
+    border: none ;
+    box-shadow: 0 0 15px #f3f0f0b0;
+}
+.appointment-card:hover
+{
+    box-shadow: 0 0 15px darkgray;
+    transform: scale(1.1);
+}
+.appointment-card p{
+    font-size: 14px;
+    font-weight: 200;
+}

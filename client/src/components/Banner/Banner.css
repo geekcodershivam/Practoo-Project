@@ -1,0 +1,11 @@
+.banner-area
+{
+    background-repeat: no-repeat;
+    background-size:contain;
+    min-height: 100vh;
+}
+@media (max-width:777px){
+    .banner-area{
+        background-size: cover;
+    }
+}

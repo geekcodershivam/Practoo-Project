@@ -1,0 +1,18 @@
+.appbar{
+    background-color:white;
+    width:100%;
+    align:left;
+}
+.logs{
+    text-align:left;
+    color: green;
+    font-family:Roboto;
+}
+.btnl{
+        width: 150px;
+        border-radius: 3px;
+        letter-spacing: 1.5px;
+        margin-right: 1rem;
+        margin-left: 1rem;
+        color: black; 
+}

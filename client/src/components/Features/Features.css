@@ -1,0 +1,8 @@
+.feature-area
+{
+    position: relative;
+    top:-100px;
+}
+.feature-area .icon{
+    font-size:3em;
+}

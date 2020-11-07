@@ -1,0 +1,36 @@
+.appbar{
+    background-color:white;
+    width: 100%;
+}
+.log{
+    color:green;
+    font-family: Roboto;
+    font-size: 20px;
+}
+ 
+.btn{
+    color:black;
+    text-decoration: none;
+    list-style: none;
+}
+.navbar{
+    font-size: 13pt;
+    font-weight: 500;
+}
+.active {
+	border-bottom: #1cc7c1 2px solid;
+}
+.navbar-brand strong
+{
+    font-weight: 800;
+}
+.navbar-expand-sm .navbar-nav .nav-link
+{
+    padding-left: 2.2rem;
+}
+.navbar-brand img
+{
+    height:40%;
+    width:45%;
+}
+
