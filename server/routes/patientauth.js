@@ -5,6 +5,11 @@ const jwt = require("jsonwebtoken");
 const Validator = require("validator");
 const isEmpty = require("is-empty");
 const keys = require("../config/keys");
+require('dotenv').config();
+const { v4: uuidv4 } = require('uuid');
+const PaytmChecksum = require('../payment/PaytmChecksum');
+const formidable=require('formidable')
+
 
 const ValidateRegisterInput = function validateRegisterInput(data) {
     let errors = {};
@@ -217,7 +222,217 @@ const ValidateLoginInput = function validateLoginInput(data) {
       });
     });
   });
+//   router.post("/payment", (req, res) => {
+//     if (!req.body.amount || !req.body.email || !req.body.phone) {
+//         res.status(400).send('Payment failed')
+//       } else {
+//         var params = {};
+//         params['MID'] = process.env.MID;
+//         params['WEBSITE'] = process.env.WEBSITE;
+//         params['CHANNEL_ID'] = 'WEB';
+//         params['INDUSTRY_TYPE_ID'] = 'Retail';
+//         params['ORDER_ID'] = 'TEST_' + new Date().getTime();
+//         params['CUST_ID'] = 'customer_'+uuidv4();
+//         params['TXN_AMOUNT'] = 250;
+//         params['CALLBACK_URL'] = 'http://localhost:4000/patient/callback';
+//         params['EMAIL'] = 'shivamtripathi214@gmail.com';
+//         params['MOBILE_NO'] = '9990151009';
+    
+    
+//         var paytmChecksum = PaytmChecksum.generateSignature(params, process.env.PAYTM_MERCHANT_KEY);
+//         paytmChecksum.then(function(checksum){
+//             let paytmParams={
+//                 ...params,
+//                 "CHECKSUMHASH":checksum
+//             }
+//             res.json(paytmParams)
+//         }).catch(function(error){
+//           console.log(error);
+//         });
+
+//       }
+// })
+
+// router.post('/callback', (req, res) => {
+//     var body = '';
+//     req.on('data', function (data) {
+//        body += data;
+//     });
+  
+//      req.on('end', function () {
+//        var html = "";
+//        var post_data = qs.parse(body);
+  
+//        // received params in callback
+//        console.log('Callback Response: ', post_data, "\n");
+  
+  
+//        // verify the checksum
+//        var checksumhash = post_data.CHECKSUMHASH;
+//        // delete post_data.CHECKSUMHASH;
+//        var result = PaytmChecksum.verifychecksum(post_data, process.env.KEY, checksumhash);
+//        console.log("Checksum Result => ", result, "\n");
+  
+  
+//        // Send Server-to-Server request to verify Order Status
+//        var params = {"MID": process.env.MID, "ORDERID": post_data.ORDERID};
+  
+//        PaytmChecksum.genchecksum(params, process.env.KEY, function (err, checksum) {
+  
+//          params.CHECKSUMHASH = checksum;
+//          post_data = 'JsonData='+JSON.stringify(params);
+  
+//          var options = {
+//            hostname: 'securegw-stage.paytm.in', // for staging
+//            // hostname: 'securegw.paytm.in', // for production
+//            port: 443,
+//            path: '/merchant-status/getTxnStatus',
+//            method: 'POST',
+//            headers: {
+//              'Content-Type': 'application/x-www-form-urlencoded',
+//              'Content-Length': post_data.length
+//            }
+//          };
+  
+  
+//          // Set up the request
+//          var response = "";
+//          var post_req = https.request(options, function(post_res) {
+//            post_res.on('data', function (chunk) {
+//              response += chunk;
+//            });
+  
+//            post_res.on('end', function(){
+//              console.log('S2S Response: ', response, "\n");
+  
+//              var _result = JSON.parse(response);
+//                if(_result.STATUS == 'TXN_SUCCESS') {
+//                    res.send('payment sucess')
+//                }else {
+//                    res.send('payment failed')
+//                }
+//              });
+//          });
+  
+//          // post the data
+//          post_req.write(post_data);
+//          post_req.end();
+//         });
+//        });
+//   })
+
+router.post('/payment',(req,res)=>
+{
 
 
+const{amount,email}=req.body;
+
+    /* import checksum generation utility */
+const totalAmount=JSON.stringify(amount);
+var params = {};
+
+/* initialize an array */
+params['MID'] = process.env.PAYTM_MID,
+params['WEBSITE'] = process.env.PAYTM_WEBSITE,
+params['CHANNEL_ID'] = process.env.PAYTM_CHANNEL_ID,
+params['INDUSTRY_TYPE_ID'] = process.env.PAYTM_INDUSTRY_TYPE_ID,
+params['ORDER_ID'] = uuidv4(),
+params['CUST_ID'] = process.env.PAYTM_CUST_ID + new Date().getTime(),
+params['TXN_AMOUNT'] = totalAmount,
+params['CALLBACK_URL'] = 'http://localhost:4000/patient/callback',
+params['EMAIL'] =email,
+params['MOBILE_NO'] = '9876543210'
+
+/**
+* Generate checksum by parameters we have
+* Find your Merchant Key in your Paytm Dashboard at https://dashboard.paytm.com/next/apikeys 
+*/
+var paytmChecksum = PaytmChecksum.generateSignature(params, process.env.PAYTM_MERCHANT_KEY);
+paytmChecksum.then(function(checksum){
+    let paytmParams={
+        ...params,
+        "CHECKSUMHASH":checksum
+    }
+    res.json(paytmParams)
+}).catch(function(error){
+	console.log(error);
+});
+
+})
+
+router.post('/callback',(req,res)=>
+{
+
+const form=new formidable.IncomingForm();
+
+form.parse(req,(err,fields,file)=>
+{
+paytmChecksum = fields.CHECKSUMHASH;
+delete fields.CHECKSUMHASH;
+var isVerifySignature = PaytmChecksum.verifySignature(fields, process.env.PAYTM_MERCHANT_KEY, paytmChecksum);
+if (isVerifySignature) {
+    var paytmParams = {};
+    paytmParams["MID"]     = fields.MID;
+    paytmParams["ORDERID"] = fields.ORDERID;
+    
+    /*
+    * Generate checksum by parameters we have
+    * Find your Merchant Key in your Paytm Dashboard at https://dashboard.paytm.com/next/apikeys 
+    */
+    PaytmChecksum.generateSignature(paytmParams, process.env.PAYTM_MERCHANT_KEY).then(function(checksum){
+    
+        paytmParams["CHECKSUMHASH"] = checksum;
+    
+        var post_data = JSON.stringify(paytmParams);
+    
+        var options = {
+    
+            /* for Staging */
+            hostname: 'securegw-stage.paytm.in',
+    
+            /* for Production */
+            // hostname: 'securegw.paytm.in',
+    
+            port: 443,
+            path: '/order/status',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': post_data.length
+            }
+        };
+    
+        var response = "";
+        var post_req = https.request(options, function(post_res) {
+            post_res.on('data', function (chunk) {
+                response += chunk;
+            });
+    
+            post_res.on('end', function(){
+                res.json(response)
+            });
+        });
+    
+        post_req.write(post_data);
+        post_req.end();
+    });        
+
+} else {
+	console.log("Checksum Mismatched");
+}
+})
+
+})
+
+
+router.post('/sends', (req, res) => {
+
+  const name = req.body.name
+  const email = req.body.email
+  const message = req.body.message
+  const subject = req.body.subject
+  require('../validations/sendMail').sendMails(email,name,subject,message);
+  
+})
   module.exports = router;
 

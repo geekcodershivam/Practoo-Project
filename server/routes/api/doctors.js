@@ -19,5 +19,11 @@ router.get('/doctors', function(req, res){
         res.send(docs);
       })
   })
+  // router.get('/send',function(req,res){
+  //   res.send(console.log("shivam"));
+  // })
+  // router.get('/payment',function(req,res){
+  //   res.send(console.log('payment-by-paytm'));
+  // })
   module.exports = router;
 
